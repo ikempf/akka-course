@@ -9,7 +9,6 @@ import akka.stream.{ActorMaterializer, Materializer}
 import akka.stream.scaladsl.{Sink, Source}
 
 import scala.concurrent.duration._
-import scala.concurrent.Await
 
 object Main extends App {
 
@@ -29,9 +28,10 @@ object Main extends App {
 
   Source
     .fromIterator(() => Iterator.continually(producer ? Pull))
-    .mapAsync(1)(identity)
-    .mapAsync(1) {
-      case Offer(i) => consumer ? Take(i)
+    .mapAsync(10) { f =>
+      f.flatMap {
+        case Offer(i) => consumer ? Take(i)
+      }
     }
     .runWith(Sink.ignore)
 
