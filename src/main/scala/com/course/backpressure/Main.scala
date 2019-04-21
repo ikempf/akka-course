@@ -28,11 +28,9 @@ object Main extends App {
 
   Source
     .fromIterator(() => Iterator.continually(producer ? Pull))
-    .mapAsync(10) { f =>
-      f.flatMap {
-        case Offer(i) => consumer ? Take(i)
-      }
-    }
+    .mapAsync(10)(future =>
+      future.flatMap { case Offer(i) => consumer ? Take(i) }
+    )
     .runWith(Sink.ignore)
 
 }
