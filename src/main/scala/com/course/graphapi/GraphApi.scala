@@ -1,13 +1,13 @@
 package com.course.graphapi
 
-import akka.{Done, NotUsed}
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.GraphDSL.Implicits._
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Partition, Source}
 import akka.stream.{ActorMaterializer, FlowShape, Graph}
 import com.course.graphapi.Util._
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Await
 import scala.concurrent.duration._
 case class Mail(to: String, body: String)
 
