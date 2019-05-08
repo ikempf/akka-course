@@ -3,7 +3,7 @@
 
 ---
 
-## Traitement naïf
+## Traitement naïf de données
 ```scala
 def saveToDb(input: String): Future[String]
 
@@ -24,7 +24,7 @@ Si la production (lecture fichier) est plus lente que la consommation (écriture
 
 ### Prouction rapide - Consommation lente
 
-Pour la taille de donnée suffisamment grande une des erreurs suivantes est forcément rencontrée. 
+Pour une taille de donnée suffisamment grande une des erreurs suivantes est forcément rencontrée. 
 
 - Memoire insuffisante
 - Thread insuffisants
@@ -36,7 +36,7 @@ Pour la taille de donnée suffisamment grande une des erreurs suivantes est forc
 
 Le **débit** du flux de donnée est controlée par le producteur.
 
-Le consommateur subit la vitesse du producteur.
+Le consommateur **subit** la vitesse du producteur.
 
 ---
 
@@ -46,7 +46,7 @@ Pour que le traitement de la donnée fonctionne en toutes circonstancesm il faut
 
 C'est la **backpressure**.
 
-Sans régulation de cette dernière, le bon traitement de la donnée dépend de facteurs externes (taille de la donnée, vitesse de services tiers, 9 etc.)
+Sans régulation de cette dernière, le bon traitement de la donnée dépend de facteurs externes (taille de la donnée, vitesse de services tiers, etc.)
 
 ---
 
