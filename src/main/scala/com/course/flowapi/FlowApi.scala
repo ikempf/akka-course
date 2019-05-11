@@ -1,9 +1,9 @@
-package com.course.streamapi
+package com.course.flowapi
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Sink, Source}
-import com.course.streamapi.Stub.saveToDb
+import com.course.flowapi.Stub.saveToDb
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
