@@ -1,6 +1,5 @@
 # Akka - régles génerales
 
-
 ---
 
 # Délivrance des messages
@@ -33,7 +32,7 @@ Plusieurs méchanismes entrent en jeu avant que le message soit éffectivement t
 
 ### Récéption - mailbox
 
-- La mailbox a été **interompu**, le message part en DeadLetter queue
+- La mailbox a été **interompue**, le message part en DeadLetter queue
 - La mailbox est **bounded** (ex: BoundedMailbox)
 - Une mailbox custom peut **refuser** le message
 
@@ -62,12 +61,19 @@ Akka ne renverra **jamais** automatiquement un message.
 
 Vous pouvez être certain de ne pas recevoir de doublon suite à des problèmes techniques.
 
+---
+
+La sémantique du **at-most-one** s'oppose à
+- **at-least-once**: tout message est réçu une ou plusieurs fois
+- **exactly-once**: tout message est reçu exactement une fois
+
+Le premier est le plus performant. Il est possible d'implémenter les autres sémantiques.  
 
 ---
 
-### Acknowledgment
+### At-least-once delivery
 
-Si la bonne récéption/traitement est primordiale, un ack manuel doit etre implementé.
+Si la bonne récéption/traitement est primordiale, un ack manuel doit etre implémenté.
 
 Vous pouvez pour cela utiliser le ask pattern.
 
@@ -75,6 +81,14 @@ Vous pouvez pour cela utiliser le ask pattern.
 actor1 ==== BusinessMessage ====> actor2 
 actor1      <==== Done ====       actor2 
 ```
+
+---
+
+### Exactly-once delivery
+
+Similaire au **at-least-once** mais il faut garder un historique des tous les messages déjà traités.
+
+Des mécanismes idempotent sont préférables.
 
 ---
 
@@ -90,9 +104,50 @@ Les messages sont dépilés **séquentiellement** depuis la mailbox.
 
 ---
 
-## Couplage
+## Thread-safety
 
-La récéption de messages est **découplée** du traitement de message.
+Malgré l'isolation des acteurs les problèmes de concurrences persistent.
+
+```
+var counter = 0
+
+asyncOperation.onComplete(_ => counter = counter + 1)
+```
+
+La lambda est éxécuté sur un autre thread !
+
+---
+
+## Thread-safety
+
+Attention aux closures, ne pas référencer
+- vars
+- objets mutables
+- sender()
+- context
+- etc.
+
+---
+
+## Thread-safety
+
+Suppression des vars en utilisant `context.become`
+
+```
+var counter = 0
+def receive = { case Msg => counter = counter + 1 }
+```
+
+```
+def receive = counting(0)
+def counting(counter: Int): Receive = { case Msg => context.become(counting(counter + 1)) }
+```
+
+---
+
+## Récéption et traitement
+
+La récéption de messages est **découplée** du traitement.
 
 La mailbox n'est pas affecté par l'activité de l'acteur.
 
@@ -100,8 +155,23 @@ La mailbox n'est pas affecté par l'activité de l'acteur.
 
 # Ordre des messages
 
+---
+
+L'ordre de récéption est garanti entre **deux acteurs**
+
+```
+A envoi  M1, M2, M3, M4 à B
+B recoit M1, M2, M3, M4 dans l'ordre
+```
+
+Attention: des messages en provenance d'autres acteurs peuvent s'entrelacer dans la séquence.
 
 ---
+
+La régle d'ordre s'applique seulement 
+- entre **deux acteurs**
+- si la mailbox est FIFO
+
 
 ---
  
