@@ -223,4 +223,4 @@ En plus de la méthode obligatoire **receive** il est possible de surcharger d'a
 
 Akka prône la philosophie du **let it crash** et du **fire and forget**. 
 
-Il faut essayer autant que possible d'aller en ce sens. 
+Il faut essayer autant que possible d'aller en ce sens.
