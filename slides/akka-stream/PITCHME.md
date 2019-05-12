@@ -32,7 +32,7 @@ Deux schémas sont possibles
 
 ### Production rapide - Consommation lente
 
-Pour une taille de données suffisamment grande, une des erreurs suivantes est forcément rencontrée. 
+Pour une taille de données suffisamment grande, une des erreurs suivantes est forcément rencontrée 
 
 - Mémoire insuffisante
 - Threads insuffisants
@@ -112,7 +112,7 @@ Si les *stages* de la graph api ne suffisent pas.
 
 Les stages custom sont usuellement mutables.
 
-L'utilisation est délicate 
+L'utilisation est délicate: 
 - Callbacks
 - Effets de bord
 - Pull/push manuel
@@ -134,4 +134,4 @@ L'utilisation est délicate
 - Ne jamais streamer sans considérer la backpressure
 - Toujours utiliser l'api la plus simple
 - Comme dans akka-actor il ne faut pas bloquer
-- Ne pas commencer par optimiser
+- Ne pas commencer par optimiser, les paramètres par défaut suffisent usuellement
