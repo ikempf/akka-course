@@ -67,7 +67,7 @@ La sémantique du **at-most-one** s'oppose à
 - **at-least-once**: tout message est réçu une ou plusieurs fois
 - **exactly-once**: tout message est reçu exactement/traité une fois
 
-Le premier est le plus performant. Il est possible d'implémenter les deux autres manuellement.  
+Le premier est le plus performant. Il est possible d'implémenter le second.  
 
 ---
 

@@ -41,13 +41,41 @@ Dead letter might or not indicate a problem and are thus can be disabled.
 
 ```
 akka {
-  log-dead-letters = 10 // on/off/number
+  log-dead-letters = 10 // on-off-number
   log-dead-letters-during-shutdown = on
 }
 ```
 
 ---
 
+# Pattern ask
 
 ---
+
+Two communication patterns are available in akka.
+
+- Tell
+```
+TargetActor ! Message // Unit
+```
+
+- Ask
+```
+TargetActor ! Message // Future[Any]
+```
+
+---
+
+# Scheduling
+
+
+
+---
+
+# Error handling
+
+ 
+---
+ 
+ 
  
