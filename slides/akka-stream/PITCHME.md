@@ -16,6 +16,13 @@ while (lines.nonEmpty) {
 
 ---
 
+Deux schémas sont possibles
+
+- La capacité de consommation de données est plus rapide que la production
+- La production de données est plus rapide que la consommation
+
+---
+
 ### Production lente - Consommation rapide
 
 - Le streaming se déroule sans problème
