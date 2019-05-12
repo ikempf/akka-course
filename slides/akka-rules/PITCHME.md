@@ -1,4 +1,4 @@
-# Akka - régles génerales
+# Akka - règles génerales
 
 ---
 
@@ -10,35 +10,35 @@
 
 Un message n'est jamais directement envoyé à un acteur en utilisant **tell** ou **ask**.
 
-Plusieurs méchanismes entrent en jeu avant que le message soit éffectivement traité.
+Plusieurs mécanismes entrent en jeu avant que le message soit effectivement traité.
 
 ---
 
 ### Cycle de vie
 
-- Envoi à un *actorRef*
+- Envoi a un *actorRef*
 - Mise en file (ou non) dans la mailbox
 - Le message est retiré de la mailbox par l'acteur
 - Le message est traité (ou non) par l'acteur
 
 ---
 
-### Récéption - réseau
+### Envoi du message
 
-- **Local**: l'envoi est iso avec un appel de fonction et atteindra la mailbox
+- **Local**: l'envoi est identique avec un appel de fonction et atteindra toujours la mailbox
 - **Cluster**: l'envoi est sumis aux aléas du réseau, aucun renvoi automatique en cas de perte
 
 ---
 
-### Récéption - mailbox
+### Réception du message
 
 - La mailbox a été **interompue**, le message part en DeadLetter queue
-- La mailbox est **bounded** (ex: BoundedMailbox)
+- Une mailbox **bounded** (ex: BoundedMailbox) peut ignorer le message
 - Une mailbox custom peut **refuser** le message
 
 ---
 
-### Récéption - acteur
+### Traitement message
 
 - L'acteur a été **interompu**, le message part en DeadLetter queue 
 - Le message est **inconnu** de l'acteur (*unhandled*) 
@@ -46,9 +46,9 @@ Plusieurs méchanismes entrent en jeu avant que le message soit éffectivement t
 
 ---
 
-### Récéption - résumé
+### Perte de message - résumé
 
-La récéption et le traitement d'un message ne sont pas garanti par akka, tout message peut être : 
+La réception et le traitement d'un message ne sont pas garantis par akka, tout message peut être : 
 - *perdu* par le réseau (dans un contexte cluster)
 - *refusé* par la mailbox
 - *ignoré* par l'acteur
@@ -65,30 +65,30 @@ Vous pouvez être certain de ne pas recevoir de doublon suite à des problèmes 
 
 La sémantique du **at-most-one** s'oppose à
 - **at-least-once**: tout message est réçu une ou plusieurs fois
-- **exactly-once**: tout message est reçu exactement une fois
+- **exactly-once**: tout message est reçu exactement/traité une fois
 
-Le premier est le plus performant. Il est possible d'implémenter les autres sémantiques.  
+Le premier est le plus performant. Il est possible d'implémenter les deux autres manuellement.  
 
 ---
 
-### At-least-once delivery
+## At-least-once delivery
 
-Si la bonne récéption/traitement est primordiale, un ack manuel doit etre implémenté.
-
-Vous pouvez pour cela utiliser le ask pattern.
+Si la bonne réception/traitement est primordiale, un ack manuel doit être implémenté.
 
 ```
 actor1 ==== BusinessMessage ====> actor2 
 actor1      <==== Done ====       actor2 
 ```
 
+Vous pouvez pour cela utiliser le *ask* pattern.
+
 ---
 
-### Exactly-once delivery
+## Exactly-once delivery
 
-Similaire au **at-least-once** mais il faut garder un historique des tous les messages déjà traités.
+Similaire au **at-least-once** mais il faut garder un historique de tous les messages déjà traités.
 
-Des mécanismes idempotent sont préférables.
+Des mécanismes idempotents sont préférables.
 
 ---
 
@@ -100,17 +100,16 @@ Des mécanismes idempotent sont préférables.
 
 Les messages sont dépilés **séquentiellement** depuis la mailbox.
 
-À tout instant, au plus *un seul* message est en traitement par l'acteur.
+À tout instant, au plus **un seul** message est en traitement par l'acteur.
 
 ---
 
 ## Thread-safety
 
-Malgré l'isolation des acteurs les problèmes de concurrences persistent.
+Malgré l'isolation des acteurs les problèmes de concurrence persistent.
 
 ```
 var counter = 0
-
 asyncOperation.onComplete(_ => counter = counter + 1)
 ```
 
@@ -147,9 +146,9 @@ def counting(counter: Int): Receive = { case Msg => context.become(counting(coun
 
 ## Récéption et traitement
 
-La récéption de messages est **découplée** du traitement.
+La réception de messages est **découplée** du traitement.
 
-La mailbox n'est pas affecté par l'activité de l'acteur.
+La mailbox n'est pas affectée par l'activité de l'acteur.
 
 ---
 
@@ -157,7 +156,7 @@ La mailbox n'est pas affecté par l'activité de l'acteur.
 
 ---
 
-L'ordre de récéption est garanti entre **deux acteurs**
+L'ordre de réception est garanti entre **deux acteurs**
 
 ```
 A envoi  M1, M2, M3, M4 à B
@@ -168,10 +167,54 @@ Attention: des messages en provenance d'autres acteurs peuvent s'entrelacer dans
 
 ---
 
-La régle d'ordre s'applique seulement 
+La règle d'ordre s'applique seulement 
 - entre **deux acteurs**
 - si la mailbox est FIFO
 
+---
+
+# Cycle de vie d'un acteur
 
 ---
+
+En plus de la méthode obligatoire **receive** il est possible de surcharger d'autres méthodes
+- preStart
+- postStop
+- preRestart
+- postRestart 
+
+---
+
+### preStart
+
+- Appelé après le démarrage de l'acteur
+- Permet d'exécuter du code d'initialisation
+- Par défaut cette méthode ne fait rien
+
+---
+
+### postStop
+
+- Appelé après l'arrêt de l'acteur
+- Permet de libérer des ressources
+- Par défaut cette méthode ne fait rien
+
+---
+
+### preRestart
+
+- Appelé avant le redémarrage de l'acteur
+- Permet de libérer des ressources
+- Par défaut: termine tous les enfants de l'acteur, appelle **postStop** 
+- Deux arguments
+ - L'exception à l'origine du redémarrage
+ - L'éventuel message en cours de traitement
+
+---
+
+### postRestart
+
+- Appelé après le redémarrage de l'acteur
+- Par défaut: appelle preStart
+
  
