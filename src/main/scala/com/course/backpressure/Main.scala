@@ -8,6 +8,7 @@ import akka.pattern.ask
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.stream.scaladsl.{Sink, Source}
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
 object Main extends App {
@@ -21,11 +22,13 @@ object Main extends App {
   val producer  = system.actorOf(Producer.props(50.milliseconds))
   val consumer  = system.actorOf(Consumer.props(200.milliseconds))
 
-//  while (true) {
-//    val Offer(i) = Await.result(producer ? Pull, 5.second)
-//    consumer ! Take(i)
-//  }
+  // Naice approach
+  while (true) {
+    val Offer(i) = Await.result(producer ? Pull, 5.second)
+    consumer ! Take(i)
+  }
 
+  // Back-pressured approach
   Source
     .fromIterator(() => Iterator.continually(producer ? Pull))
     .mapAsync(10)(future =>

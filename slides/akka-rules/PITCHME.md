@@ -3,7 +3,11 @@
 
 ---
 
-## Mailbox
+# Délivrance des messages
+
+---
+
+### Cycle de vie
 
 Un message n'est jamais directement envoyé à un acteur en utilisant **tell** ou **ask**.
 
@@ -11,7 +15,7 @@ Plusieurs méchanismes entrent en jeu avant que le message soit éffectivement t
 
 ---
 
-Le cycle de vie d'un message
+### Cycle de vie
 
 - Envoi à un *actorRef*
 - Mise en file (ou non) dans la mailbox
@@ -22,8 +26,8 @@ Le cycle de vie d'un message
 
 ### Récéption - réseau
 
-- Local: l'envoi est iso avec un appel de fonction et atteindra la mailbox
-- Cluster: l'envoi est sumis aux aléas du réseau, aucun renvoi automatique en cas de perte
+- **Local**: l'envoi est iso avec un appel de fonction et atteindra la mailbox
+- **Cluster**: l'envoi est sumis aux aléas du réseau, aucun renvoi automatique en cas de perte
 
 ---
 
@@ -38,16 +42,14 @@ Le cycle de vie d'un message
 ### Récéption - acteur
 
 - L'acteur a été **interompu**, le message part en DeadLetter queue 
-- Le message est **inconnu** de l'acteur (pas dans le receive) 
+- Le message est **inconnu** de l'acteur (*unhandled*) 
 - Le traitement du message **échoue**
 
 ---
 
 ### Récéption - résumé
 
-La récéption et le traitement d'un message ne sont pas garanti par akka.
-
-Tout message peut être 
+La récéption et le traitement d'un message ne sont pas garanti par akka, tout message peut être : 
 - *perdu* par le réseau (dans un contexte cluster)
 - *refusé* par la mailbox
 - *ignoré* par l'acteur
@@ -58,22 +60,48 @@ Tout message peut être
 
 Akka ne renverra **jamais** automatiquement un message.
 
-Vous pouvez être certain de ne jamais recevoir de doublon suite à des problèmes techniques.
+Vous pouvez être certain de ne pas recevoir de doublon suite à des problèmes techniques.
 
 
 ---
+
+### Acknowledgment
 
 Si la bonne récéption/traitement est primordiale, un ack manuel doit etre implementé.
 
 Vous pouvez pour cela utiliser le ask pattern.
 
 ```
-actor1 =BusinessMessage=> actor2 
-actor1      <=Done=       actor2 
+actor1 ==== BusinessMessage ====> actor2 
+actor1      <==== Done ====       actor2 
 ```
 
 ---
 
-## 
+# Traitement des messages
+
+---
+
+## Thread-safety 
+
+Les messages sont dépilés **séquentiellement** depuis la mailbox.
+
+À tout instant, au plus *un seul* message est en traitement par l'acteur.
+
+---
+
+## Couplage
+
+La récéption de messages est **découplée** du traitement de message.
+
+La mailbox n'est pas affecté par l'activité de l'acteur.
+
+---
+
+# Ordre des messages
+
+
+---
+
+---
  
-Au plus *un seul* message est en traitement 
