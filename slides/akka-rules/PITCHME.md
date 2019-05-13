@@ -1,125 +1,127 @@
-# Akka - règles génerales
+# Akka - general rules
 
 ---
 
-# Délivrance des messages
+# Message delivery guarantees
 
 ---
 
-### Cycle de vie
+### Message lifecycle
 
-Un message n'est jamais directement envoyé à un acteur en utilisant **tell** ou **ask**.
+A message is never directly sent to an actor when using **tell** or **ask**.
 
-Plusieurs mécanismes entrent en jeu avant que le message soit effectivement traité.
-
----
-
-### Cycle de vie
-
-- Envoi a un *actorRef*
-- Mise en file (ou non) dans la mailbox
-- Le message est retiré de la mailbox par l'acteur
-- Le message est traité (ou non) par l'acteur
+Multiple mechanics have to be accounted for before the message is effectively processed by the target actor. 
 
 ---
 
-### Envoi du message
+### Message lifecycle
 
-- **Local**: l'envoi est identique avec un appel de fonction et atteindra toujours la mailbox
-- **Cluster**: l'envoi est sumis aux aléas du réseau, aucun renvoi automatique en cas de perte
-
----
-
-### Réception du message
-
-- La mailbox a été **interompue**, le message part en DeadLetter queue
-- Une mailbox **bounded** (ex: BoundedMailbox) peut ignorer le message
-- Une mailbox custom peut **refuser** le message
+- Sent to an *actorRef*
+- Enqueued (*or not*) in the mailbox
+- The message is dequeued from the mailbox by the actor
+- The message is processed (*or not*) by the actor
 
 ---
 
-### Traitement message
+### Message sending
 
-- L'acteur a été **interompu**, le message part en DeadLetter queue 
-- Le message est **inconnu** de l'acteur (*unhandled*) 
-- Le traitement du message **échoue**
+- **Local**: delivery is identical to calling a function, the message will always reach the mailbox
+- **Cluster**: delivery is subject to network failures, there is no automatic retransmission
 
 ---
 
-### Perte de message - résumé
+### Message reception
 
-La réception et le traitement d'un message ne sont pas garantis par akka, tout message peut être : 
-- *perdu* par le réseau (dans un contexte cluster)
-- *refusé* par la mailbox
-- *ignoré* par l'acteur
+Enqueuing can fail for multiple reasons
+- The mailbox has been **suspended**, the message goes to the DeadLetter queue
+- The mailbox is **bounded** and thus drops the message (ex: BoundedMailbox) 
+- A custom mailbox might simply **ignore** the message
+
+---
+
+### Message processing
+
+Message handling by the target actor can fail
+- The target actor has been **terminated**, the message goes to the DeadLetter queue
+- The message is **unknown** to the actor (*unandled*)
+- The processing of the message **fails**
+
+---
+
+### Message delivery failures summary
+
+Delivery and processing are not guaranteed by akka, any message is subject to being
+- **lost** through network failures (in a cluster context)
+- **refused** through by the mailbox
+- **ignored** by the target actor
 
 ---
 
 ## At-most-once delivery
 
-Akka ne renverra **jamais** automatiquement un message.
+Akka will **never** automatically resend a message.
 
-Vous pouvez être certain de ne pas recevoir de doublon suite à des problèmes techniques.
+You can be certain that you will never receive duplicated messages due to technical reasons.
 
 ---
 
-La sémantique du **at-most-one** s'oppose à
-- **at-least-once**: tout message est réçu une ou plusieurs fois
-- **exactly-once**: tout message est reçu exactement/traité une fois
+**at-most-one** semantics are opposed to
+- **at-least-once**: every message is received once or more
+- **exactly-once**: every message is received exactly once
 
-Le premier est le plus performant. Il est possible d'implémenter le second.  
+The former is the simplest and most performant. It is possible to implement the second without too much overhead.
 
 ---
 
 ## At-least-once delivery
 
-Si la bonne réception/traitement est primordiale, un ack manuel doit être implémenté.
+If correct delivery/processing is mandatory, a manual ack can be implemented.
 
 ```
 actor1 ==== BusinessMessage ====> actor2 
 actor1      <==== Done ====       actor2 
 ```
 
-Vous pouvez pour cela utiliser le *ask* pattern.
+It is possible to use the **ask patterm** for this.
 
 ---
 
 ## Exactly-once delivery
 
-Similaire au **at-least-once** mais il faut garder un historique de tous les messages déjà traités.
+Exactly-once delivery is difficult, exactly-once processing is impossible.
 
-Des mécanismes idempotents sont préférables.
+Strive for idempotent message handling whenever possible.
 
 ---
 
-# Traitement des messages
+# Message processing
 
 ---
 
 ## Thread-safety 
 
-Les messages sont dépilés **séquentiellement** depuis la mailbox.
+Messages are dequed **sequentially** from the mailbox.
 
-À tout instant, au plus **un seul** message est en traitement par l'acteur.
+At any moment, **at most one** message is being processed by the actor.
 
 ---
 
 ## Thread-safety
 
-Malgré l'isolation des acteurs les problèmes de concurrence persistent.
+Desplite the strong isolation of actors concurrency issures can still arise.
 
 ```
 var counter = 0
 asyncOperation.onComplete(_ => counter = counter + 1)
 ```
 
-La lambda est éxécuté sur un autre thread !
+The completion lambda is executed on another thread !
 
 ---
 
 ## Thread-safety
 
-Attention aux closures, ne pas référencer
+Be careful with **closures**, you should never close-over
 - vars
 - objets mutables
 - sender()
@@ -130,7 +132,7 @@ Attention aux closures, ne pas référencer
 
 ## Thread-safety
 
-Suppression des vars en utilisant `context.become`
+It's possible to avoid vars through the use of `context.become`
 
 ```
 var counter = 0
@@ -144,38 +146,39 @@ def counting(counter: Int): Receive = { case Msg => context.become(counting(coun
 
 ---
 
-## Récéption et traitement
+## Reception and processing
 
-La réception de messages est **découplée** du traitement.
+Message reception is **decoupled** of it's coupling.
 
-La mailbox n'est pas affectée par l'activité de l'acteur.
-
----
-
-# Ordre des messages
+The mailbox is not affected by the actors activity. Notably: it will not be blocked by the actor.
 
 ---
 
-L'ordre de réception est garanti entre **deux acteurs**
+# Message ordering
+
+---
+
+Message order is guaranteed between **two actors**
 
 ```
-A envoi  M1, M2, M3, M4 à B
-B recoit M1, M2, M3, M4 dans l'ordre
+A sends    M1, M2, M3, M4 to B
+B receives M1, M2, M3, M4 in order
 ```
 
-Attention: des messages en provenance d'autres acteurs peuvent s'entrelacer dans la séquence.
+Warning: messages coming from other actors might be interlaced in the former sequence.
 
 ---
 
-La règle d'ordre s'applique seulement 
-- entre **deux acteurs**
-- si la mailbox est FIFO
+The ordering guarantees only apply 
+- between **two actors**
+- if the mailbox is FIFO
 
 ---
 
-# Cycle de vie d'un acteur
+# Actor lifecycle
 
 ---
+
 
 En plus de la méthode obligatoire **receive** il est possible de surcharger d'autres méthodes
 - preStart
