@@ -179,51 +179,66 @@ The ordering guarantees only apply
 
 ---
 
+- Actor creation `system.actorOf()`
+- Actor resumes or restarts
+- Actor terminates: `context.stop()` or `PoisonPill` or `Kill`
 
-En plus de la méthode obligatoire **receive** il est possible de surcharger d'autres méthodes
-- preStart
-- postStop
-- preRestart
-- postRestart 
+---
+
+Several methods can be overloaded to customize the actors behavior during it's lifecycle.
+
+- `preStart`
+- `receive`
+- `preRestart`
+- `postRestart` 
+- `postStop`
 
 ---
 
 ### preStart
 
-- Appelé après le démarrage de l'acteur
-- Permet d'exécuter du code d'initialisation
-- Par défaut cette méthode ne fait rien
+- Called after the actor is spawned
+- Allows the execution of initialization code
+- By default, this method does nothing
 
 ---
 
-### postStop
+### receive
 
-- Appelé après l'arrêt de l'acteur
-- Permet de libérer des ressources
-- Par défaut cette méthode ne fait rien
+- Represents the runtime behavior of the actor
+- The only method that must be overridden
 
 ---
 
 ### preRestart
 
-- Appelé avant le redémarrage de l'acteur
-- Permet de libérer des ressources
-- Par défaut: termine tous les enfants de l'acteur, appelle **postStop** 
-- Deux arguments
- - L'exception à l'origine du redémarrage
- - L'éventuel message en cours de traitement
+- Called before the actor is restarted
+- Allows to free resources
+- By default all child actors are killed, calls **postStop** 
+- Two parameters
+ - The exception that caused the restart
+ - The eventual message that was being processed
 
 ---
 
 ### postRestart
 
-- Appelé après le redémarrage de l'acteur
-- Par défaut: appelle preStart
+- Called after the actor restart
+- By default: calls **preStart**
 
 ---
 
-# Notes de fin
+### postStop
 
-Akka prône la philosophie du **let it crash** et du **fire and forget**. 
+- Called after the actor has stopped
+- Allows for resource freeing
+- By default the method does nothing
 
-Il faut essayer autant que possible d'aller en ce sens.
+---
+
+## Closing points
+
+- Few delivery guarantees
+- Avoid concurrency at all costs
+- Failures will happen, **let-it-crash** and recover
+- Be aware that actor restarts will happen

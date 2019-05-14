@@ -28,7 +28,7 @@ object Main extends App {
     consumer ! Take(i)
   }
 
-  // Back-pressured approach
+  // Backpressured approach
   Source
     .fromIterator(() => Iterator.continually(producer ? Pull))
     .mapAsync(10)(future =>

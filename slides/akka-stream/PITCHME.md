@@ -3,7 +3,7 @@
 
 ---
 
-## Traitement naïf de données
+## Naive data processing
 ```scala
 def saveToDb(input: String): Future[String]
 
@@ -16,67 +16,70 @@ while (lines.nonEmpty) {
 
 ---
 
-Deux schémas sont possibles
+Two different scenarios might present themselves
 
-- La capacité de consommation de données est plus rapide que la production
-- La production de données est plus rapide que la consommation
-
----
-
-### Production lente - Consommation rapide
-
-- Le streaming se déroule sans problème
-- Rarement garanti dans un système d'information avec de nombreux acteurs s'impactant mutuellement 
+- The consumer is faster than the producer
+- The producer is faster than the consumer
 
 ---
 
-### Production rapide - Consommation lente
+### Slow producer - fast consumer
 
-Pour une taille de données suffisamment grande, une des erreurs suivantes est forcément rencontrée 
+In the case, data streaming will work smoothly.
 
-- Mémoire insuffisante
-- Threads insuffisants
-- Exception "garde-fou" (seuil de connexions jdbc, http, file-descriptors, etc.)
+This is rarely given in time for any big enough system. Production and/or consumption might vary because of external actors. 
 
 ---
 
-### Le problème
+### Fast producer - slow consumer
 
-Le **débit** du flux de données est contrôlée par le producteur.
+For a big enough dataset, one of the following errors will eventually arise.
 
-Le consommateur **subit** la vitesse du producteur.
+- Out of memory
+- Out of threads
+- A safeguard error (jdbc connexions, http connexions, open file-descriptors, etc.)
+
+---
+
+### The issue
+
+The **throughput** of the data flow is controlled by the producer.
+
+The consumer **endure** the producer's speed
 
 ---
 
 ### Mauvaises solutions
 
-- Throttling "artificiel" du producteur
-- Scaling manuel du hardware sous-jacent
-- Augmentation des buffers
+- "artificial" throttling of the producteur
+- Tedius manual scaling of underlying hardware
+- Increasing the buffer sizes
 
 ---
 
 ### Solution
 
-Il faut réguler le flux en fonction du **consommateur**.
+The data flow must be regulated according to the **consumers** capacity.
 
-On parle alors de **back-pressure**.
+The is called **backpressure**.
 
-Sans régulation de cette dernière, le bon traitement de la donnée dépend de **facteurs externes** (taille de la donnée, vitesse de services tiers, etc.)
+When not regulating the latter, correct data processing depends on **dynamic external factors** (dataset, service speeds, etc.)
 
 ---
 
 ## Flow API
 
-Le premier niveau d'utilisation d'akka-stream.
+The first usage level of akka-stream.
 
-Réponds à la majorité des besoins tout en restant très expressif.
+Will suffice for most use-cases while being very expressive.
+
+This kind of API is found in many other reactive streaming libraries.
 
 ---
 
 ### Flow API - limitations
 
-Modélisation de streams **linéaires** uniquement.
+Only models **linear** dataflows.
 
 
 ```
@@ -87,7 +90,9 @@ Source ==> transformation ==> transormation ==> Sink
 
 ## Graph API
 
-Comme son nom l'indique, permet de modéliser des graphes.
+Second usage level of akka-stream.
+
+As it name suggests, this API allows to model graphs.
 
 ```
 Source1 ==>                ==> transormation1 
@@ -99,39 +104,41 @@ Source3 ==>
 
 ### Graph API
 
-- Api mutable
-- Partiellement vérifié à la compilation
-- Danger de deadlock
-- Très puissant (Broadcast, Partition, Bidirectional etc.)
+- Mutable API
+- Only partially compile-time verified
+- Can model deadlocks
+- Very powerful (Broadcast, Partition, Bidirectional, etc.)
 
 ---
 
 ## GraphStage Api
 
-Si les *stages* de la graph api ne suffisent pas.
+Third usage level of akka-stream.
 
-Les stages custom sont usuellement mutables.
+If **existing stages** of the graph api are not enough.
 
-L'utilisation est délicate: 
+Custom stagers are usually stateful (mutable).
+
+Usage can be very tricky
 - Callbacks
-- Effets de bord
-- Pull/push manuel
-- Complétion normale/exceptionnelle
+- Side-effects
+- Manual pull/push
+- Manual completion (success/failure)
 - Etc.
 
 ---
 
-### GraphStage Api - Exemples
+### GraphStage Api - examples
 
-- Compteur d'éléments
-- Monitoring de vélocité
-- Agrégation
+- Element counter
+- Velocity monitoring
+- Aggregation of any kind
 
 ---
 
-## Remarques de fin
+## Closing notes
 
-- Ne jamais streamer sans considérer la backpressure
-- Toujours utiliser l'api la plus simple
-- Comme dans akka-actor il ne faut pas bloquer
-- Ne pas commencer par optimiser, les paramètres par défaut suffisent usuellement
+- **Always** consider backpressure
+- **Always** use the simplest api (mainly h=the flow api)
+- **Never** block (just like akka-actors)
+- **Do not** start by optimising, a simple flow with default parameters will be enough 
