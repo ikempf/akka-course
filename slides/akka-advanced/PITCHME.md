@@ -99,7 +99,7 @@ override def receive = {
 }
 ```
 
-If no response is sent, the future will timeout
+If no response is sent, the future will time-out.
 
 ---
 
@@ -111,7 +111,6 @@ The ask response is of type **Any**
   .map {
     case Person(name) => doSomething(name)
   }
-
 ```
 
 ```scala
@@ -223,7 +222,7 @@ The supervision strategy can handle failures in different ways
 - One-for-one: Each actor is handled separately
 - All-for-one: When a child actor fails all children are affected
 
-You will mostly use **one-for-all**. **all-for-one** makes sense if the actors states are coupled.
+You will mostly use **one-for-all**. **all-for-one** makes sense if the actors' states are coupled.
 
 ---
 

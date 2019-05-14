@@ -27,6 +27,8 @@ Two different scenarios might present themselves
 
 In the case, data streaming will work smoothly.
 
+**But**
+
 This is rarely given in time for any big enough system. Production and/or consumption might vary because of external actors. 
 
 ---
@@ -38,21 +40,21 @@ For a big enough dataset, one of the following errors will eventually arise.
 - Out of memory
 - Out of threads
 - A safeguard error (jdbc connexions, http connexions, open file-descriptors, etc.)
-
+- (Any kind of limited resource)
 ---
 
 ### The issue
 
 The **throughput** of the data flow is controlled by the producer.
 
-The consumer **endure** the producer's speed
+The consumer **endures** the producer's speed.
 
 ---
 
-### Mauvaises solutions
+### Bad solutions
 
-- "artificial" throttling of the producteur
-- Tedius manual scaling of underlying hardware
+- "artificial" throttling of the producer
+- Tedious manual scaling of underlying hardware
 - Increasing the buffer sizes
 
 ---
@@ -83,7 +85,7 @@ Only models **linear** dataflows.
 
 
 ```
-Source ==> transformation ==> transormation ==> Sink
+Source ==> transformation ==> transformation ==> Sink
 ```
 
 ---
@@ -95,8 +97,8 @@ Second usage level of akka-stream.
 As it name suggests, this API allows to model graphs.
 
 ```
-Source1 ==>                ==> transormation1 
-Source2 ==> transformation ==> transormation2 ==> Sink
+Source1 ==>                ==> transformation1 
+Source2 ==> transformation ==> transformation2 ==> Sink
 Source3 ==>                
 ```
 

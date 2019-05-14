@@ -52,7 +52,7 @@ Message handling by the target actor can fail
 
 Delivery and processing are not guaranteed by akka, any message is subject to being
 - **lost** through network failures (in a cluster context)
-- **refused** through by the mailbox
+- **refused** by the mailbox
 - **ignored** by the target actor
 
 ---
@@ -123,7 +123,7 @@ The completion lambda is executed on another thread !
 
 Be careful with **closures**, you should never close-over
 - vars
-- objets mutables
+- mutable objects
 - sender()
 - context
 - etc.
