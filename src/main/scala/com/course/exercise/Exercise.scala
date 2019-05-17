@@ -19,21 +19,9 @@ object Exercise extends App {
   implicit val materializer: Materializer = ActorMaterializer()
   import system.dispatcher
 
-//  val futures = Util.bigFile.map(requestFib)
-//  Future
-//    .sequence(futures)
-//    .onComplete(
-//      result => {
-//        println(s"Finished with $result")
-//        system.terminate()
-//      }
-//    )
+  val futures = Util.bigFile.map(requestFib)
 
-  val run =
-    Source
-      .fromIterator(() => Util.bigFile)
-      .mapAsync(5)(requestFib)
-      .runWith(Sink.ignore)
+  val run = Future.sequence(futures)
 
   run
     .onComplete(
