@@ -4,7 +4,8 @@ lazy val `akka-course` = (project in file("."))
     name := "akka-stream",
     scalaVersion := "2.12.8",
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-stream" % "2.5.22",
+      "com.typesafe.akka" %% "akka-http"           % "10.1.8",
+      "com.typesafe.akka" %% "akka-stream"         % "2.5.22",
       "com.typesafe.akka" %% "akka-stream-testkit" % "2.5.22" % Test
     ),
     scalacOptions ++= List(
