@@ -4,26 +4,46 @@ import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{HttpEntity, HttpMethods, HttpRequest}
+import akka.http.scaladsl.model.{HttpEntity, HttpMethods, HttpRequest, HttpResponse}
+import akka.http.scaladsl.unmarshalling.Unmarshal
+import akka.stream.{ActorMaterializer, Materializer}
+import akka.stream.scaladsl.{Sink, Source}
 import com.course.exercise.Util.requestFib
-
-import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 import scala.util.Random
 
 object Exercise extends App {
 
-  implicit val system: ActorSystem = ActorSystem()
+  implicit val system: ActorSystem        = ActorSystem()
+  implicit val materializer: Materializer = ActorMaterializer()
   import system.dispatcher
 
-  val futures = Util.bigFile.map(requestFib)
-  Future
-    .sequence(futures)
+//  val futures = Util.bigFile.map(requestFib)
+//  Future
+//    .sequence(futures)
+//    .onComplete(
+//      result => {
+//        println(s"Finished with $result")
+//        system.terminate()
+//      }
+//    )
+
+  val run =
+    Source
+      .fromIterator(() => Util.bigFile)
+      .mapAsync(5)(requestFib)
+      .runWith(Sink.ignore)
+
+  run
     .onComplete(
       result => {
         println(s"Finished with $result")
         system.terminate()
       }
     )
+
+  Await.result(run, 1.minute)
 
 }
 
@@ -33,7 +53,7 @@ object Util {
   val started  = new AtomicLong(0)
   val finished = new AtomicLong(0)
 
-  def requestFib(n: Int)(implicit as: ActorSystem): Future[Unit] = {
+  def requestFib(n: Int)(implicit as: ActorSystem, map: Materializer): Future[Int] = {
     import as.dispatcher
 
     val currStarted = started.incrementAndGet()
@@ -47,26 +67,29 @@ object Util {
           entity = HttpEntity(Integer.toString(n))
         )
       )
-      .map(resp => {
+      .flatMap(resp => {
         val currFinished = finished.incrementAndGet()
         logFinished(currFinished)
-
-        if (resp.status.intValue() != 200) {
-          println(resp.status)
-          System.exit(1)
-        }
+        assertOk(resp)
+        Unmarshal(resp.entity).to[String].map(_.toInt)
       })
   }
 
   private def logFinished(currentStart: Long): Unit =
-    log("Started", currentStart)
+    log("Finished", currentStart)
 
   private def logStarted(currentStart: Long): Unit =
     log("Started", currentStart)
 
   private def log(label: String, currentStart: Long): Unit =
-    if (currentStart % 10 == 0)
+    if (true)
       println(s"$label $currentStart requests")
+
+  private def assertOk(resp: HttpResponse): Unit =
+    if (resp.status.intValue() != 200) {
+      println(resp.status)
+      System.exit(1)
+    }
 
   def bigFile: Iterator[Int] =
     Iterator.fill(1000)(Random.nextInt(20))
